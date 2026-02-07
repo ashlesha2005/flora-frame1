@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Plants</title>
+</head>
+<body>
+
+    <h2>All Plants</h2>
+
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price</th>
+        </tr>
+
+        {% for plant in plants %}
+        <tr>
+            <td>{{ plant[0] }}</td>
+            <td>{{ plant[1] }}</td>
+            <td>{{ plant[2] }}</td>
+            <td>{{ plant[3] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <br>
+    <a href="/admin/dashboard">Back to Dashboard</a>
+
+</body>
+</html>

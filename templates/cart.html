@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Cart</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="cart-container">
+
+    <h2>Your Cart 🛒</h2>
+
+    <a href="/" class="cart-back">← Back to Home</a>
+
+    {% if cart %}
+
+        <ul class="cart-list">
+            {% for item in cart %}
+                <li class="cart-item">
+
+                    <!-- Plant Name -->
+                    <span class="cart-item-name">
+                        {{ item.name }}
+                    </span>
+
+                    <!-- Quantity Controls -->
+                    <div class="quantity-box">
+                        <a href="/decrease_quantity/{{ loop.index0 }}" class="qty-btn">−</a>
+                        <span class="qty-number">{{ item.quantity }}</span>
+                        <a href="/increase_quantity/{{ loop.index0 }}" class="qty-btn">+</a>
+                    </div>
+                    
+                    <!-- Price -->
+                    <span class="cart-item-price">
+                        ₹{{ item.price * item.quantity }}
+                    </span>
+
+                    <!-- Remove -->
+                    <a href="/remove_from_cart/{{ loop.index0 }}" class="remove-btn">
+                        Remove
+                    </a>
+
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="cart-total">
+            Total: ₹{{ total }}
+        </div>
+
+        <!-- Checkout Button -->
+        <div class="checkout-section">
+            <a href="/checkout" class="checkout-btn">Proceed to Checkout</a>
+        </div>
+
+    {% else %}
+
+        <p class="empty-cart">
+            Your cart is empty 🌱
+        </p>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

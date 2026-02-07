@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Plant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+
+<div class="admin-container">
+    <div class="card" style="max-width:500px;margin:auto;">
+        <h2>Edit Plant 🌿</h2>
+
+        <!-- IMPORTANT: enctype added -->
+        <form method="POST" enctype="multipart/form-data">
+
+            <label>Name</label>
+            <input type="text" name="name" value="{{ plant[0] }}" required>
+
+            <label>Category</label>
+            <input type="text" name="category" value="{{ plant[1] }}" required>
+
+            <label>Price</label>
+            <input type="number" step="0.01" name="price" value="{{ plant[2] }}" required>
+
+            <label>Description</label>
+            <textarea name="description" rows="4" required>{{ plant[4] }}</textarea>
+
+            <label>Current Image</label><br>
+            {% if plant[3] %}
+                <img src="{{ url_for('static', filename='uploads/' ~ plant[3]) }}"
+                     style="width:120px;border-radius:8px;margin-bottom:10px;">
+            {% else %}
+                <p>No image uploaded</p>
+            {% endif %}
+
+            <label>Change Image (optional)</label>
+            <input type="file" name="image" accept="image/*">
+
+            <button type="submit">Update Plant</button>
+        </form>
+
+        <br>
+        <a href="/admin/dashboard">← Back</a>
+    </div>
+</div>
+
+</body>
+</html>

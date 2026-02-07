@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ plant[1] }} – The Flora Frame</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<a href="/">← Back to Home</a>
+
+<div class="plant-detail-container">
+
+    <!-- Image Section -->
+    <div class="plant-detail-image">
+        {% if plant[4] %}
+            <img src="{{ url_for('static', filename='uploads/' ~ plant[4]) }}">
+        {% else %}
+            <img src="{{ url_for('static', filename='logo.png') }}">
+        {% endif %}
+    </div>
+
+    <!-- Plant Info Section -->
+    <div class="plant-detail-info">
+        <h1>{{ plant[1] }}</h1>
+
+        <p><strong>Category:</strong> {{ plant[2] }}</p>
+
+        <p class="price">₹ {{ plant[3] }}</p>
+
+        <p class="description">
+            {{ plant[5] }}
+        </p>
+
+        <!-- Buy / Login -->
+        {% if session.get('user_id') %}
+            <a href="/add_to_cart/{{ plant[0] }}">
+                <button>Add to Cart</button>
+            </a>
+        {% else %}
+            <a href="/login">
+                <button>Login to Buy</button>
+            </a>
+        {% endif %}
+    </div>
+
+</div>
+
+<hr style="margin:40px 0;">
+
+<!-- ⭐ Average Rating -->
+{% if total_reviews > 0 %}
+    <p style="font-size:18px; font-weight:bold;">
+        ⭐ {{ average_rating }} / 5
+        <span style="font-size:14px; color:gray;">
+            (Based on {{ total_reviews }} reviews)
+        </span>
+    </p>
+{% endif %}
+
+<!-- Reviews Section -->
+<h2>Customer Reviews 🌱</h2>
+
+{% if reviews %}
+    {% for r in reviews %}
+        <div style="margin-bottom:15px; padding:12px; border:1px solid #ddd; border-radius:8px; max-width:600px;">
+            <strong>{{ r[0] }}</strong><br>
+            Rating: {{ r[1] }} ⭐<br>
+            "{{ r[2] }}"
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No reviews yet. Be the first to review!</p>
+{% endif %}
+
+{% if session.get('user_id') %}
+    <hr style="margin:40px 0;">
+    <h3>Add Your Review 🌿</h3>
+
+    <form method="POST" action="/add_review/{{ plant[0] }}">
+        <label>Rating:</label><br>
+        <select name="rating" required>
+            <option value="">Select</option>
+            <option value="5">5 ⭐</option>
+            <option value="4">4 ⭐</option>
+            <option value="3">3 ⭐</option>
+            <option value="2">2 ⭐</option>
+            <option value="1">1 ⭐</option>
+        </select>
+        <br><br>
+
+        <label>Your Review:</label><br>
+        <textarea name="review_text" rows="3" required></textarea>
+        <br><br>
+
+        <button type="submit">Submit Review</button>
+    </form>
+{% else %}
+    <p><strong>Login to add a review.</strong></p>
+{% endif %}
+
+</body>
+</html>

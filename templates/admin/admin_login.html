@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+
+<div class="admin-container">
+    <div class="card" style="max-width:420px;margin:auto;">
+        <h2>Admin Login 🔐</h2>
+
+        <form method="POST">
+            <label>Username</label>
+            <input type="text" name="username" required>
+
+            <label>Password</label>
+            <input type="password" name="password" required>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <br>
+        <a href="/">← Back to Website</a>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Flora Frame – Online Plant Nursery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<!-- TOP HEADER -->
+<header class="top-header">
+    <div class="logo">
+        <span>The Flora Frame</span>
+    </div>
+
+    <div class="search-box">
+        <form action="/search" method="get" class="search-box">
+    <input 
+    type="text"
+    id="searchInput"
+    name="q"
+    placeholder="Search plants, pots, gifts..."
+    autocomplete="off"
+    required
+    >
+    <div id="suggestions"></div>
+
+        </form>
+
+    </div>
+
+    <div class="auth-links">
+        {% if session.get('user_name') %}
+            <span>Welcome, {{ session['user_name'] }}</span>
+            <a href="/cart">Cart</a>
+            <a href="/logout" class="register">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/register" class="register">Register</a>
+        {% endif %}
+    </div>
+</header>
+
+<!-- NAV BAR -->
+<div class="nav-bar">
+    <a href="/plants/Indoor">Indoor Plants</a>
+    <a href="/plants/Outdoor">Outdoor Plants</a>
+    <a href="/plants/Medicinal">Medicinal</a>
+    <a href="/plants/Fake">Fake Plants</a>
+    <a href="/plants/Gifting">Gifting</a>
+    <a href="/about">About</a>
+    <a href="/tips">Plant Care</a>
+
+</div>
+
+<!-- HERO SECTION -->
+<section class="hero">
+    <img src="{{ url_for('static', filename='logo.png') }}" class="hero-logo">
+    <h1>THE FLORA FRAME</h1>
+    <p><strong>Online Plant Nursery</strong></p>
+    <p>Because Every Space Deserves a Touch of Green</p>
+</section>
+
+<!-- PLANTS SECTION -->
+<section class="plants">
+    <h2>Our Best Sellers</h2>
+
+    <div class="plant-grid">
+
+        {% for plant in plants %}
+        <div class="plant-card">
+
+            <!-- CLICKABLE PLANT IMAGE -->
+            <a href="/plant/{{ plant[0] }}">
+                {% if plant[3] %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ plant[3]) }}">
+                {% else %}
+                    <img src="{{ url_for('static', filename='logo.png') }}">
+                {% endif %}
+            </a>
+
+            <!-- Plant Details -->
+            <h3>{{ plant[1] }}</h3>
+            <p class="price">₹ {{ plant[2] }}</p>
+
+            <!-- Action Button -->
+            {% if session.get('user_id') %}
+                <a href="/add_to_cart/{{ plant[0] }}">
+                    <button>Add to Cart</button>
+                </a>
+            {% else %}
+                <a href="/login">
+                    <button>Login to Buy</button>
+                </a>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+
+    </div>
+</section>
+
+<footer>
+    © 2026 The Flora Frame | Online Plant Nursery
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const input = document.getElementById("searchInput");
+    const suggestionsBox = document.getElementById("suggestions");
+
+    input.addEventListener("keyup", function () {
+        const query = input.value.trim();
+
+        if (query.length < 2) {
+            suggestionsBox.innerHTML = "";
+            return;
+        }
+
+        fetch(`/search-suggestions?q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                suggestionsBox.innerHTML = "";
+
+                data.suggestions.forEach(item => {
+                    const div = document.createElement("div");
+                    div.textContent = item;
+
+                    div.onclick = () => {
+                        input.value = item;
+                        suggestionsBox.innerHTML = "";
+                    };
+
+                    suggestionsBox.appendChild(div);
+                });
+            });
+    });
+
+});
+</script>
+
+</body>
+</html>

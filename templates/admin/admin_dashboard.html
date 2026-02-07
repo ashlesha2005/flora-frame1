@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
+</head>
+<body>
+
+<div class="admin-container">
+
+    <div class="admin-nav">
+        <h2>Welcome Admin 🌿</h2>
+        <div>
+            <a href="/">Website</a> |
+            <a href="/admin/logout">Logout</a>
+        </div>
+    </div>
+
+    <a href="/admin/add-plant">
+        <button>Add New Plant</button>
+    </a>
+
+    <div class="card">
+        <h3>All Plants</h3>
+
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Actions</th>
+            </tr>
+
+            {% for plant in plants %}
+            <tr>
+                <td>{{ plant[0] }}</td>
+                <td>{{ plant[1] }}</td>
+                <td>{{ plant[2] }}</td>
+                <td>₹ {{ plant[3] }}</td>
+                <td>
+                    <a class="action-link edit" href="/admin/edit/{{ plant[0] }}">Edit</a>
+                    <a class="action-link delete"
+                       href="/admin/delete/{{ plant[0] }}"
+                       onclick="return confirm('Are you sure?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>

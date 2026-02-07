@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h2>Welcome Back 🌱</h2>
+
+        <form method="POST">
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p>Don't have an account? <a href="/register">Register</a></p>
+
+        <!-- subtle admin access -->
+        <a href="/admin/login" class="admin-link">•</a>
+    </div>
+</div>
+
+</body>
+</html>
