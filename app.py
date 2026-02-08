@@ -60,6 +60,7 @@ def plant_detail(plant_id):
         FROM plants
         WHERE id = ?
     """, (plant_id,))
+
     plant = cursor.fetchone()
 
     if not plant:
@@ -97,7 +98,7 @@ def plant_detail(plant_id):
 def add_review(plant_id):
     if 'user_id' not in session:
         return redirect('/login')
-
+    
     rating = request.form['rating']
     review_text = request.form['review_text']
 
@@ -113,13 +114,7 @@ def add_review(plant_id):
     cursor.execute("""
         INSERT INTO reviews (plant_name, user_name, rating, review_text)
         VALUES (?, ?, ?, ?)
-    """, (
-        plant["name"],
-        session.get('user_name'),
-        rating,
-        review_text
-    ))
-
+    """, (plant["name"], session.get('user_name'), rating, review_text))
     conn.commit()
     conn.close()
     return redirect(f'/plant/{plant_id}')
@@ -137,9 +132,7 @@ def search():
     cursor.execute("""
         SELECT id, name, price, image
         FROM plants
-        WHERE name LIKE ?
-        OR category LIKE ?
-        OR description LIKE ?
+        WHERE name LIKE ? OR category LIKE ? OR description LIKE ?
     """, (f"%{query}%", f"%{query}%", f"%{query}%"))
 
     results = cursor.fetchall()
@@ -158,9 +151,7 @@ def search_suggestions():
     cursor.execute("""
         SELECT DISTINCT name
         FROM plants
-        WHERE name LIKE ?
-        OR category LIKE ?
-        OR description LIKE ?
+        WHERE name LIKE ? OR category LIKE ? OR description LIKE ?
         LIMIT 6
     """, (f"%{q}%", f"%{q}%", f"%{q}%"))
 
@@ -183,7 +174,7 @@ def register():
         conn.commit()
         conn.close()
         return redirect('/login')
-
+    
     return render_template('register.html')
 
 
@@ -197,6 +188,7 @@ def login():
             (request.form['email'], request.form['password'])
         )
         user = cursor.fetchone()
+
         conn.close()
 
         if user:
@@ -205,7 +197,7 @@ def login():
             session.setdefault('cart', [])
             return redirect('/')
         return "Invalid Login Credentials"
-
+    
     return render_template('login.html')
 
 
@@ -221,7 +213,7 @@ def logout():
 def add_to_cart(plant_id):
     if 'user_id' not in session:
         return redirect('/login')
-
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT id, name, price FROM plants WHERE id=?", (plant_id,))
@@ -235,7 +227,7 @@ def add_to_cart(plant_id):
                 item['quantity'] += 1
                 session.modified = True
                 return redirect('/cart')
-
+            
         cart.append({
             'id': plant["id"],
             'name': plant["name"],
@@ -247,11 +239,43 @@ def add_to_cart(plant_id):
     return redirect('/cart')
 
 
+@app.route('/increase_quantity/<int:index>')
+def increase_quantity(index):
+    if 'user_id' not in session:
+        return redirect('/login')
+    cart = session.get('cart', [])
+    if 0 <= index < len(cart):
+        cart[index]['quantity'] += 1
+        session.modified = True
+    return redirect('/cart')
+
+@app.route('/decrease_quantity/<int:index>')
+def decrease_quantity(index):
+    if 'user_id' not in session:
+        return redirect('/login')
+    cart = session.get('cart', [])
+    if 0 <= index < len(cart):
+        cart[index]['quantity'] -= 1
+        if cart[index]['quantity'] <= 0:
+            cart.pop(index)
+        session.modified = True
+    return redirect('/cart')
+
+@app.route('/remove_from_cart/<int:index>')
+def remove_from_cart(index):
+    if 'user_id' not in session:
+        return redirect('/login')
+    cart = session.get('cart', [])
+    if 0 <= index < len(cart):
+        cart.pop(index)
+        session.modified = True
+    return redirect('/cart')
+
 @app.route('/cart')
 def cart():
     if 'user_id' not in session:
         return redirect('/login')
-
+    
     cart_items = session.get('cart', [])
     total = sum(item['price'] * item['quantity'] for item in cart_items)
     return render_template('cart.html', cart=cart_items, total=total)
@@ -262,12 +286,12 @@ def cart():
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     if 'user_id' not in session:
-        return redirect('/login')
-
+        return redirect('/login'
+                        )
     cart = session.get('cart', [])
     if not cart:
         return redirect('/cart')
-
+    
     total = sum(item['price'] * item['quantity'] for item in cart)
 
     if request.method == 'POST':
@@ -291,18 +315,12 @@ def checkout():
             cursor.execute("""
                 INSERT INTO order_items (order_id, plant_id, quantity, price)
                 VALUES (?, ?, ?, ?)
-            """, (
-                order_id,
-                item['id'],
-                item['quantity'],
-                item['price']
-            ))
-
+            """, (order_id, item['id'], item['quantity'], item['price']))
         conn.commit()
         conn.close()
         session['cart'] = []
         return redirect('/order_success')
-
+    
     return render_template('checkout.html', total=total)
 
 
@@ -322,9 +340,120 @@ def about():
 def tips():
     return render_template('tips.html')
 
+# ================= ADMIN SIDE =================
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id FROM admin WHERE username=? AND password=?",
+            (username, password)
+        )
+        admin = cursor.fetchone()
+        conn.close()
+        if admin:
+            session['admin'] = True
+            return redirect('/admin/dashboard')
+        else:
+            return "Invalid Admin Credentials"
+    return render_template('admin/admin_login.html')
+
+@app.route('/admin/dashboard')
+def admin_dashboard():
+    if 'admin' not in session:
+        return redirect('/admin/login')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name, category, price FROM plants")
+    plants = cursor.fetchall()
+    conn.close()
+    return render_template('admin/admin_dashboard.html', plants=plants)
+
+@app.route('/admin/add-plant', methods=['GET', 'POST'])
+def admin_add_plant():
+    if 'admin' not in session:
+        return redirect('/admin/login')
+    if request.method == 'POST':
+        name = request.form['name']
+        category = request.form['category']
+        price = request.form['price']
+        description = request.form['description']
+        image_file = request.files.get('image')
+        image_filename = None
+        if image_file and image_file.filename != '':
+            image_filename = secure_filename(image_file.filename)
+            upload_folder = 'static/uploads'
+            os.makedirs(upload_folder, exist_ok=True)
+            image_file.save(os.path.join(upload_folder, image_filename))
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO plants (name, category, price, image, description)
+            VALUES (?, ?, ?, ?, ?)
+        """, (name, category, price, image_filename, description))
+        conn.commit()
+        conn.close()
+        return redirect('/admin/dashboard')
+    return render_template('admin/add_plant.html')
+
+@app.route('/admin/edit/<int:id>', methods=['GET', 'POST'])
+def admin_edit(id):
+    if 'admin' not in session:
+        return redirect('/admin/login')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if request.method == 'POST':
+        name = request.form['name']
+        category = request.form['category']
+        price = request.form['price']
+        description = request.form['description']
+        image_file = request.files.get('image')
+        if image_file and image_file.filename != '':
+            image_filename = secure_filename(image_file.filename)
+            upload_folder = 'static/uploads'
+            os.makedirs(upload_folder, exist_ok=True)
+            image_file.save(os.path.join(upload_folder, image_filename))
+            cursor.execute("""
+                UPDATE plants
+                SET name=?, category=?, price=?, image=?, description=?
+                WHERE id=?
+            """, (name, category, price, image_filename, description, id))
+        else:
+            cursor.execute("""
+                UPDATE plants
+                SET name=?, category=?, price=?, description=?
+                WHERE id=?
+            """, (name, category, price, description, id))
+        conn.commit()
+        conn.close()
+        return redirect('/admin/dashboard')
+    cursor.execute("SELECT name, category, price, image, description FROM plants WHERE id=?", (id,))
+    plant = cursor.fetchone()
+    conn.close()
+    return render_template('admin/admin_edit.html', plant=plant)
+
+@app.route('/admin/delete/<int:id>')
+def admin_delete(id):
+    if 'admin' not in session:
+        return redirect('/admin/login')
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM plants WHERE id=?", (id,))
+    conn.commit()
+    conn.close()
+    return redirect('/admin/dashboard')
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin', None)
+    return redirect('/admin/login')
 
 # ================= RUN =================
+
 if __name__ == "__main__":
-    import os
+    
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
